@@ -5,7 +5,11 @@ import java.util.Random;
 
 public class UpdatePlayer {
 
-    private final static String[] objectList = {"Lookout Ring : Prevents surprise attacks","Scroll of Stupidity : INT-2 when applied to an enemy", "Draupnir : Increases XP gained by 100%", "Magic Charm : Magic +10 for 5 rounds", "Rune Staff of Curse : May burn your ennemies... Or yourself. Who knows?", "Combat Edge : Well, that's an edge", "Holy Elixir : Recover your HP"
+    private final static String[] objectList = { "Lookout Ring : Prevents surprise attacks",
+            "Scroll of Stupidity : INT-2 when applied to an enemy", "Draupnir : Increases XP gained by 100%",
+            "Magic Charm : Magic +10 for 5 rounds",
+            "Rune Staff of Curse : May burn your ennemies... Or yourself. Who knows?",
+            "Combat Edge : Well, that's an edge", "Holy Elixir : Recover your HP"
     };
 
     public static HashMap<String, HashMap<Integer, HashMap<String, Integer>>> abilitiesPerTypeAndLevel() {
@@ -40,7 +44,6 @@ public class UpdatePlayer {
 
         abilitiesPerTypeAndLevel.put("ADVENTURER", adventurerMap);
 
-
         HashMap<Integer, HashMap<String, Integer>> archerMap = new HashMap<>();
         HashMap<String, Integer> archerLevel1 = new HashMap<>();
         archerLevel1.put("INT", 1);
@@ -68,7 +71,6 @@ public class UpdatePlayer {
 
         abilitiesPerTypeAndLevel.put("ARCHER", archerMap);
 
-
         HashMap<Integer, HashMap<String, Integer>> dwarf = new HashMap<>();
         HashMap<String, Integer> dwarfLevel1 = new HashMap<>();
         dwarfLevel1.put("ALC", 4);
@@ -95,25 +97,53 @@ public class UpdatePlayer {
 
         abilitiesPerTypeAndLevel.put("DWARF", dwarf);
 
+        HashMap<Integer, HashMap<String, Integer>> goblinMap = new HashMap<>();
+
+        HashMap<String, Integer> goblinLevel1 = new HashMap<>();
+        goblinLevel1.put("INT", 2);
+        goblinLevel1.put("ATK", 2);
+        goblinLevel1.put("ALC", 1);
+        goblinMap.put(1, goblinLevel1);
+
+        HashMap<String, Integer> goblinLevel2 = new HashMap<>();
+        goblinLevel2.put("ATK", 3);
+        goblinLevel2.put("ALC", 4);
+        goblinMap.put(2, goblinLevel2);
+
+        HashMap<String, Integer> goblinLevel3 = new HashMap<>();
+        goblinLevel3.put("VIS", 1);
+        goblinMap.put(3, goblinLevel3);
+
+        HashMap<String, Integer> goblinLevel4 = new HashMap<>();
+        goblinLevel4.put("DEF", 1);
+        goblinMap.put(4, goblinLevel4);
+
+        HashMap<String, Integer> goblinLevel5 = new HashMap<>();
+        goblinLevel5.put("DEF", 2);
+        goblinLevel5.put("ATK", 4);
+        goblinMap.put(5, goblinLevel5);
+
+        abilitiesPerTypeAndLevel.put("GOBLIN", goblinMap);
+
         return abilitiesPerTypeAndLevel;
     }
 
-    public static boolean addXp(player player, int xp) {
-        int currentLevel = player.retrieveLevel();
-        player.xp += xp;
-        int newLevel = player.retrieveLevel();
+    public static boolean addXp(Player Player, int xp) {
+        int currentLevel = Player.retrieveLevel();
+        Player.xp += xp;
+        int newLevel = Player.retrieveLevel();
 
         if (newLevel != currentLevel) {
             // Player leveled-up!
             // Give a random object
             ;
             Random random = new Random();
-            player.inventory.add(objectList[random.nextInt(objectList.length - 0) + 0]);
+            Player.inventory.add(objectList[random.nextInt(objectList.length - 0) + 0]);
 
-            // Add/upgrade abilities to player
-            HashMap<String, Integer> abilities = abilitiesPerTypeAndLevel().get(player.getAvatarClass()).get(newLevel);
+            // Add/upgrade abilities to Player
+            HashMap<String, Integer> abilities = abilitiesPerTypeAndLevel().get(Player.getAvatarClass()).get(newLevel);
             abilities.forEach((ability, level) -> {
-                player.abilities.put(ability, abilities.get(ability));
+                Player.abilities.put(ability, abilities.get(ability));
             });
             return true;
         }
@@ -121,45 +151,56 @@ public class UpdatePlayer {
     }
 
     // majFinDeTour met à jour les points de vie
-    public static void majFinDeTour(player player) {
-        if(player.currenthealthpoints == 0) {
+    public static void majFinDeTour(Player player) {
+        // Si le joueur est KO, on ne fait rien
+        if (player.currenthealthpoints <= 0) {
             System.out.println("Le joueur est KO !");
             return;
         }
 
-        if(player.currenthealthpoints < player.healthpoints/2) {
-            if(!player.getAvatarClass().equals("ADVENTURER")) {
-                if(player.getAvatarClass().equals("DWARF")) {
-                    if(player.inventory.contains("Holy Elixir")) {
-                        player.currenthealthpoints+=1;
-                    }
-                    player.currenthealthpoints+=1;
-                } else if(player.getAvatarClass().equals("ADVENTURER")) {
-                    player.currenthealthpoints+=2;
-                }
-
-
-                if(player.getAvatarClass().equals("ARCHER")) {
-                    player.currenthealthpoints+=1;
-                    if(player.inventory.contains("Magic Bow")) {
-                        player.currenthealthpoints+=player.currenthealthpoints/8-1;
-                    }
-                }
-            } else {
-                player.currenthealthpoints+=2;
-                if(player.retrieveLevel() < 3) {
-                    player.currenthealthpoints-=1;
-                }
-            }
-        } else if(player.currenthealthpoints >= player.healthpoints/2){
-            if(player.currenthealthpoints >= player.healthpoints) {
-                player.currenthealthpoints = player.healthpoints;
-                return;
-            }
+        // Gestion de la borne max (si déjà au max)
+        if (player.currenthealthpoints >= player.healthpoints) {
+            player.currenthealthpoints = player.healthpoints;
+            return;
         }
 
+        // Si le joueur a plus de 50% de vie, pas de soin (règle actuelle du jeu)
+        if (player.currenthealthpoints >= player.healthpoints / 2) {
+            return;
+        }
 
-        if(player.currenthealthpoints >= player.healthpoints) {
+        // Application des soins selon la classe
+        switch (player.getAvatarClass()) {
+            case "DWARF":
+                player.currenthealthpoints += 1;
+                if (player.inventory.contains("Holy Elixir")) {
+                    player.currenthealthpoints += 1;
+                }
+                break;
+
+            case "ARCHER":
+                player.currenthealthpoints += 1;
+                if (player.inventory.contains("Magic Bow")) {
+                    // Attention : calcul basé sur les PVs courants (déjà augmentés de 1 juste
+                    // avant)
+                    player.currenthealthpoints += (player.currenthealthpoints / 8) - 1;
+                }
+                break;
+
+            case "ADVENTURER":
+                player.currenthealthpoints += 2;
+                if (player.retrieveLevel() < 3) {
+                    player.currenthealthpoints -= 1;
+                }
+                break;
+
+            default:
+                // Si c'est une autre classe qu'on ne connait pas, pas de soin spécifique défini
+                break;
+        }
+
+        // Vérification finale pour ne pas dépasser la vie max
+        if (player.currenthealthpoints > player.healthpoints) {
             player.currenthealthpoints = player.healthpoints;
         }
     }
