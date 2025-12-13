@@ -2,14 +2,17 @@ package re.forestier.edu.rpg;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 
-public class Player {
-    public String PlayerName;
-    public String Avatar_name;
-    private String AvatarClass;
+public abstract class Player {
+
+    public String playerName;
+    public String avatarName;
 
     public Integer money;
-    private Float __real_money__;
+    // private Float __real_money__;
+    public int maxWeight;
+    public int currentWeight;
 
     public int level;
     public int healthpoints;
@@ -19,30 +22,19 @@ public class Player {
     public HashMap<String, Integer> abilities;
     public ArrayList<String> inventory;
 
-    public Player(String PlayerName, String avatar_name, String avatarClass, int money, ArrayList<String> inventory) {
-        if (!avatarClass.equals("ARCHER") && !avatarClass.equals("ADVENTURER") && !avatarClass.equals("DWARF")
-                && !avatarClass.equals("GOBLIN")) {
-            return;
-        }
-
-        this.PlayerName = PlayerName;
-        Avatar_name = avatar_name;
-        AvatarClass = avatarClass;
-        this.money = Integer.valueOf(money);
+    public Player(String playerName, String avatarName, int money, ArrayList<String> inventory) {
+        this.playerName = playerName;
+        this.avatarName = avatarName;
+        this.money = money;
         this.inventory = inventory;
-        this.abilities = UpdatePlayer.abilitiesPerTypeAndLevel().get(AvatarClass).get(1);
-    }
-
-    public String getAvatarClass() {
-        return AvatarClass;
+        this.abilities = new HashMap<>();
     }
 
     public void removeMoney(int amount) throws IllegalArgumentException {
         if (money - amount < 0) {
             throw new IllegalArgumentException("Player can't have a negative money!");
         }
-
-        money = Integer.parseInt(money.toString()) - amount;
+        money = money - amount;
     }
 
     public void addMoney(int amount) {
@@ -66,15 +58,29 @@ public class Player {
         return this.xp;
     }
 
-    /*
-     * Ингредиенты:
-     * Для теста:
-     * 
-     * 250 г муки
-     * 125 г сливочного масла (холодное)
-     * 70 г сахара
-     * 1 яйцо
-     * 1 щепотка соли
-     */
+    public void setXp(int xp) {
+        this.xp = xp;
+    }
+
+    // ==========================================
+    // MÉTHODES ABSTRAITES (Le Contrat)
+    // ==========================================
+
+    public abstract void setAbilities();
+
+    public abstract String getAvatarClass();
+
+    public abstract HashMap<String, Integer> getAvatarLevel(int level);
 
 }
+
+/*
+ * Ингредиенты:
+ * Для теста:
+ * 
+ * 250 г муки
+ * 125 г сливочного масла (холодное)
+ * 70 г сахара
+ * 1 яйцо
+ * 1 щепотка соли
+ */

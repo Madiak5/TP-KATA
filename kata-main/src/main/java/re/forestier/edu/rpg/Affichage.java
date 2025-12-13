@@ -3,7 +3,7 @@ package re.forestier.edu.rpg;
 public class Affichage {
 
     public static String afficherJoueur(Player Player) {
-        final String[] finalString = { "Joueur " + Player.Avatar_name + " joué par " + Player.PlayerName };
+        final String[] finalString = { "Joueur " + Player.avatarName + " joué par " + Player.playerName };
         finalString[0] += "\nNiveau : " + Player.retrieveLevel() + " (XP totale : " + Player.xp + ")";
         finalString[0] += "\n\nCapacités :";
         Player.abilities.forEach((name, level) -> {

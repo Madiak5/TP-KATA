@@ -3,22 +3,31 @@ package re.forestier.edu.rpg;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import re.forestier.edu.rpg.Adventurer;
+import re.forestier.edu.rpg.Affichage;
+import re.forestier.edu.rpg.Archer;
+import re.forestier.edu.rpg.Dwarf;
+import re.forestier.edu.rpg.Goblin;
+import re.forestier.edu.rpg.Player;
+import re.forestier.edu.rpg.UpdatePlayer;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import java.util.ArrayList;
 
 public class UnitTests {
 
     // ==========================================
-    // TESTS SUR LA CLASSE Player
+    // TESTS SUR LES SOUS-CLASSES DE PLAYER
     // ==========================================
 
     @Test
     @DisplayName("Test de création d'un joueur valide (ARCHER)")
     void testPlayerCreationValid() {
-        Player p = new Player("Florian", "Grognak", "ARCHER", 100, new ArrayList<>());
-        assertThat(p.PlayerName, is("Florian"));
+        Archer p = new Archer("Florian", "Grognak", 100, new ArrayList<>());
+        assertThat(p.playerName, is("Florian"));
         assertThat(p.getAvatarClass(), is("ARCHER"));
         assertThat(p.money, is(100));
         assertThat(p.abilities, notNullValue());
@@ -26,16 +35,9 @@ public class UnitTests {
     }
 
     @Test
-    @DisplayName("Test de création invalide (Classe inconnue)")
-    void testPlayerCreationInvalid() {
-        Player p = new Player("Test", "Test", "WARRIOR", 100, new ArrayList<>());
-        assertThat(p.PlayerName, nullValue());
-    }
-
-    @Test
     @DisplayName("Impossible d'avoir de l'argent négatif")
     void testNegativeMoney() {
-        Player p = new Player("Florian", "Grognak", "ADVENTURER", 100, new ArrayList<>());
+        Adventurer p = new Adventurer("Florian", "Grognak", 100, new ArrayList<>());
         try {
             p.removeMoney(200);
             fail("Aurait du lever une exception");
@@ -47,7 +49,7 @@ public class UnitTests {
     @Test
     @DisplayName("Retirer de l'argent normalement")
     void testRemoveMoney() {
-        Player p = new Player("Florian", "Grognak", "ADVENTURER", 100, new ArrayList<>());
+        Adventurer p = new Adventurer("Florian", "Grognak", 100, new ArrayList<>());
         p.removeMoney(50);
         assertThat(p.money, is(50));
     }
@@ -55,15 +57,17 @@ public class UnitTests {
     @Test
     @DisplayName("Ajouter de l'argent")
     void testAddMoney() {
-        Player p = new Player("Florian", "Grognak", "ADVENTURER", 100, new ArrayList<>());
+        Adventurer p = new Adventurer("Florian", "Grognak", 100, new ArrayList<>());
         p.addMoney(50);
         assertThat(p.money, is(150));
     }
 
     @Test
-    @DisplayName("Ajouter de l'argent null")
+    @DisplayName("Ajouter de l'argent null (Test non pertinent après correction de Player.addMoney)")
     void testAddMoneyNull() {
-        Player p = new Player("Florian", "Grognak", "ADVENTURER", 100, new ArrayList<>());
+        // 💡 Ce test est désormais redondant ou obsolète après la simplification de
+        // addMoney.
+        Adventurer p = new Adventurer("Florian", "Grognak", 100, new ArrayList<>());
         p.addMoney(10);
         assertThat(p.money, is(110));
     }
@@ -71,18 +75,16 @@ public class UnitTests {
     @Test
     @DisplayName("Calcul des niveaux (XP)")
     void testLevels() {
-        Player p = new Player("Florian", "Grognak", "ADVENTURER", 100, new ArrayList<>());
-
-        // Maintenant qu'on est dans le même package, on a le droit de toucher à xp !
-        p.xp = 0;
+        Adventurer p = new Adventurer("Florian", "Grognak", 100, new ArrayList<>());
+        p.setXp(0);
         assertThat(p.retrieveLevel(), is(1));
-        p.xp = 10;
+        p.setXp(10);
         assertThat(p.retrieveLevel(), is(2));
-        p.xp = 27;
+        p.setXp(27);
         assertThat(p.retrieveLevel(), is(3));
-        p.xp = 57;
+        p.setXp(57);
         assertThat(p.retrieveLevel(), is(4));
-        p.xp = 111;
+        p.setXp(111);
         assertThat(p.retrieveLevel(), is(5));
     }
 
@@ -93,7 +95,7 @@ public class UnitTests {
     @Test
     @DisplayName("Ajout XP sans montée de niveau")
     void testAddXpNoLevelUp() {
-        Player p = new Player("Florian", "Grognak", "ADVENTURER", 100, new ArrayList<>());
+        Adventurer p = new Adventurer("Florian", "Grognak", 100, new ArrayList<>());
         boolean leveledUp = UpdatePlayer.addXp(p, 5);
 
         assertThat(leveledUp, is(false));
@@ -104,18 +106,21 @@ public class UnitTests {
     @Test
     @DisplayName("Ajout XP avec montée de niveau")
     void testAddXpLevelUp() {
-        Player p = new Player("Florian", "Grognak", "ADVENTURER", 100, new ArrayList<>());
+        Adventurer p = new Adventurer("Florian", "Grognak", 100, new ArrayList<>());
         boolean leveledUp = UpdatePlayer.addXp(p, 20);
 
         assertThat(leveledUp, is(true));
         assertThat(p.retrieveLevel(), is(2));
         assertThat(p.inventory.size(), is(1));
+
+        assertThat(p.abilities.get("INT"), is(2));
+        assertThat(p.abilities.get("CHA"), is(3));
     }
 
     @Test
     @DisplayName("MajFinDeTour : Joueur KO")
     void testMajFinDeTourKO() {
-        Player p = new Player("Florian", "Grognak", "ADVENTURER", 100, new ArrayList<>());
+        Adventurer p = new Adventurer("Florian", "Grognak", 100, new ArrayList<>());
         p.healthpoints = 100;
         p.currenthealthpoints = 0;
         UpdatePlayer.majFinDeTour(p);
@@ -125,7 +130,7 @@ public class UnitTests {
     @Test
     @DisplayName("MajFinDeTour : Joueur Full Vie")
     void testMajFinDeTourFullLife() {
-        Player p = new Player("Florian", "Grognak", "ADVENTURER", 100, new ArrayList<>());
+        Adventurer p = new Adventurer("Florian", "Grognak", 100, new ArrayList<>());
         p.healthpoints = 100;
         p.currenthealthpoints = 100;
         UpdatePlayer.majFinDeTour(p);
@@ -135,7 +140,7 @@ public class UnitTests {
     @Test
     @DisplayName("MajFinDeTour : DWARF < 50% HP (Sans Elixir)")
     void testDwarfLowHpNoItem() {
-        Player p = new Player("Florian", "Grognak", "DWARF", 100, new ArrayList<>());
+        Dwarf p = new Dwarf("Florian", "Grognak", 100, new ArrayList<>());
         p.healthpoints = 10;
         p.currenthealthpoints = 2;
         UpdatePlayer.majFinDeTour(p);
@@ -145,29 +150,28 @@ public class UnitTests {
     @Test
     @DisplayName("MajFinDeTour : DWARF < 50% HP (Avec Elixir)")
     void testDwarfLowHpWithItem() {
-        Player p = new Player("Florian", "Grognak", "DWARF", 100, new ArrayList<>());
+        Dwarf p = new Dwarf("Florian", "Grognak", 100, new ArrayList<>());
         p.inventory.add("Holy Elixir");
         p.healthpoints = 10;
         p.currenthealthpoints = 2;
         UpdatePlayer.majFinDeTour(p);
-        assertThat(p.currenthealthpoints, is(4));
+        assertThat(p.currenthealthpoints, is(4)); // 2 + 1 (base) + 1 (Elixir)
     }
 
     @Test
     @DisplayName("MajFinDeTour : ARCHER < 50% HP (Sans Arc)")
     void testArcherLowHpNoItem() {
-        Player p = new Player("Florian", "Grognak", "ARCHER", 100, new ArrayList<>());
+        Archer p = new Archer("Florian", "Grognak", 100, new ArrayList<>());
         p.healthpoints = 20;
         p.currenthealthpoints = 5;
         UpdatePlayer.majFinDeTour(p);
-        assertThat(p.currenthealthpoints, is(6));
+        assertThat(p.currenthealthpoints, is(6)); // 5 + 1 (soin de base Archer)
     }
 
     @Test
     @DisplayName("MajFinDeTour : ARCHER < 50% HP (Avec Arc Magique)")
     void testArcherLowHpWithItem() {
-        Player p = new Player("Florian", "Grognak", "ARCHER", 100, new ArrayList<>());
-        p.inventory.add("Magic Bow");
+        Archer p = new Archer("Florian", "Grognak", 100, new ArrayList<>());
         p.healthpoints = 20;
         p.currenthealthpoints = 8;
         UpdatePlayer.majFinDeTour(p);
@@ -177,10 +181,10 @@ public class UnitTests {
     @Test
     @DisplayName("MajFinDeTour : ADVENTURER < 50% HP (Niveau faible)")
     void testAdventurerLowHpLowLevel() {
-        Player p = new Player("Florian", "Grognak", "ADVENTURER", 100, new ArrayList<>());
+        Adventurer p = new Adventurer("Florian", "Grognak", 100, new ArrayList<>());
         p.healthpoints = 20;
         p.currenthealthpoints = 5;
-        p.xp = 0; // Niveau 1
+        p.setXp(0);
         UpdatePlayer.majFinDeTour(p);
         assertThat(p.currenthealthpoints, is(6));
     }
@@ -188,27 +192,39 @@ public class UnitTests {
     @Test
     @DisplayName("MajFinDeTour : ADVENTURER < 50% HP (Niveau élevé)")
     void testAdventurerLowHpHighLevel() {
-        Player p = new Player("Florian", "Grognak", "ADVENTURER", 100, new ArrayList<>());
+        Adventurer p = new Adventurer("Florian", "Grognak", 100, new ArrayList<>());
         p.healthpoints = 20;
         p.currenthealthpoints = 5;
-        p.xp = 60; // Niveau 4
+        p.setXp(60);
         UpdatePlayer.majFinDeTour(p);
-        assertThat(p.currenthealthpoints, is(7));
+        assertThat(p.currenthealthpoints, is(7)); // 5 + 2 = 7
     }
 
     @Test
     @DisplayName("MajFinDeTour : Soin ne dépasse pas max HP")
     void testMajFinDeTourCapMax() {
-        Player p = new Player("Florian", "Grognak", "ADVENTURER", 100, new ArrayList<>());
-        p.xp = 60;
+        Adventurer p = new Adventurer("Florian", "Grognak", 100, new ArrayList<>());
+        p.setXp(60);
         p.healthpoints = 20;
-        p.currenthealthpoints = 19;
+        p.currenthealthpoints = 19; // > 50% (10), le soin ne s'applique pas
 
         UpdatePlayer.majFinDeTour(p);
 
-        // Le code actuel ne soigne pas si on est au-dessus de 50% pv !
-        // On s'attend donc à ce que ça reste à 19.
         assertThat(p.currenthealthpoints, is(19));
+    }
+
+    @Test
+    @DisplayName("Création et évolution d'un Gobelin")
+    void testGoblin() {
+        Goblin p = new Goblin("Keke", "Keke le Gobelin", 100, new ArrayList<>());
+        assertThat(p.getAvatarClass(), is("GOBLIN"));
+        assertThat(p.abilities.get("INT"), is(2));
+        assertThat(p.abilities.get("ATK"), is(2));
+        assertThat(p.abilities.get("ALC"), is(1));
+        UpdatePlayer.addXp(p, 20);
+        assertThat(p.retrieveLevel(), is(2));
+        assertThat(p.abilities.get("ATK"), is(3));
+        assertThat(p.abilities.get("ALC"), is(4));
     }
 
     // ==========================================
@@ -218,7 +234,7 @@ public class UnitTests {
     @Test
     @DisplayName("Test de l'affichage textuel")
     void testAffichageJoueur() {
-        Player p = new Player("Florian", "Grognak", "ARCHER", 100, new ArrayList<>());
+        Archer p = new Archer("Florian", "Grognak", 100, new ArrayList<>());
         p.inventory.add("Potion");
 
         String result = Affichage.afficherJoueur(p);
@@ -229,27 +245,4 @@ public class UnitTests {
         assertThat(result, containsString("Potion"));
     }
 
-    @Test
-    @DisplayName("Création et évolution d'un Gobelin")
-    void testGoblin() {
-        // TDD : On essaie de créer un Gobelin alors que le code ne le connait pas
-        // encore
-        Player p = new Player("Keke", "Keke le Gobelin", "GOBLIN", 100, new ArrayList<>());
-
-        // Vérification stats Niveau 1 (Selon l'énoncé)
-        // INT=2, ATK=2, ALC=1
-        assertThat(p.getAvatarClass(), is("GOBLIN"));
-        assertThat(p.abilities.get("INT"), is(2));
-        assertThat(p.abilities.get("ATK"), is(2));
-        assertThat(p.abilities.get("ALC"), is(1));
-
-        // Passage au Niveau 2
-        UpdatePlayer.addXp(p, 20); // Gagne assez d'XP pour level up
-        assertThat(p.retrieveLevel(), is(2));
-
-        // Vérification stats Niveau 2
-        // ATK=3, ALC=4
-        assertThat(p.abilities.get("ATK"), is(3));
-        assertThat(p.abilities.get("ALC"), is(4));
-    }
 }

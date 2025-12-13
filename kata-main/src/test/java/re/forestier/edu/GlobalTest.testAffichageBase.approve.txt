@@ -1,0 +1,8 @@
+Joueur Gnognak le Barbare joué par Florian
+Niveau : 2 (XP totale : 20)
+
+Capacités :
+   CHA : 3
+   INT : 2
+
+Inventaire :
