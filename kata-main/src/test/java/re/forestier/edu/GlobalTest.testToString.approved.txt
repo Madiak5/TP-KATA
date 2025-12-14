@@ -1,0 +1,11 @@
+Joueur RoiArthur joué par Arthur
+Niveau : 1 (XP : 0)
+
+Capacités :
+DEF : 1
+ATK : 3
+CHA : 2
+INT : 1
+
+Inventaire :
+Excalibur (10kg, 500$)
