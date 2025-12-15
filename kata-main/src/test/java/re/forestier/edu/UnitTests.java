@@ -3,12 +3,12 @@ package re.forestier.edu.rpg;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 
 public class UnitTests {
 
@@ -29,7 +29,6 @@ public class UnitTests {
     void testNegativeMoney() {
         Player p = new Adventurer("Florian", "Grognak", 100, new ArrayList<>());
         
-        // Nouvelle syntaxe corrigée
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             p.removeMoney(200);
         });
@@ -68,7 +67,8 @@ public class UnitTests {
     @DisplayName("UpdatePlayer : Ajout XP et montée de niveau")
     void testAddXpLevelUp() {
         Player p = new Adventurer("Florian", "Grognak", 100, new ArrayList<>());
-        boolean leveledUp = UpdatePlayer.addXp(p, 20); 
+        // MODIFIÉ : Appel direct sur l'objet p
+        boolean leveledUp = p.addXp(20); 
         assertThat(leveledUp, is(true));
         assertThat(p.retrieveLevel(), is(2));
         assertThat(p.inventory.size(), is(1)); 
@@ -83,7 +83,8 @@ public class UnitTests {
         p.currenthealthpoints = 10;
         p.inventory.add(new Item("Holy Elixir", "Heals", 1, 10));
         
-        UpdatePlayer.majFinDeTour(p);
+        // MODIFIÉ : updateEndTurn au lieu de UpdatePlayer.majFinDeTour
+        p.updateEndTurn();
         assertThat(p.currenthealthpoints, is(12));
     }
 
@@ -95,7 +96,7 @@ public class UnitTests {
         p.currenthealthpoints = 20;
         p.inventory.add(new Item("Magic Bow", "Cool bow", 2, 50));
 
-        UpdatePlayer.majFinDeTour(p);
+        p.updateEndTurn();
         assertThat(p.currenthealthpoints, is(22)); 
     }
 
@@ -105,7 +106,8 @@ public class UnitTests {
         Player p = new Adventurer("Florian", "Grognak", 100, new ArrayList<>());
         p.healthpoints = 100;
         p.currenthealthpoints = 10;
-        UpdatePlayer.majFinDeTour(p);
+        
+        p.updateEndTurn();
         assertThat(p.currenthealthpoints, is(11));
     }
     
@@ -115,7 +117,9 @@ public class UnitTests {
         Player p = new Goblin("Keke", "Keke le Gobelin", 100, new ArrayList<>());
         assertThat(p.getAvatarClass(), is("GOBLIN"));
         assertThat(p.abilities.get("INT"), is(2));
-        UpdatePlayer.addXp(p, 20); 
+        
+        // MODIFIÉ : Appel direct
+        p.addXp(20); 
         assertThat(p.retrieveLevel(), is(2));
         assertThat(p.abilities.get("ATK"), is(3));
     }
@@ -158,7 +162,7 @@ public class UnitTests {
         Player p = new Adventurer("Test", "Test", 100, new ArrayList<>());
         p.currenthealthpoints = 0; 
         
-        UpdatePlayer.majFinDeTour(p);
+        p.updateEndTurn();
         
         assertThat(p.currenthealthpoints, is(0));
     }
@@ -169,7 +173,7 @@ public class UnitTests {
         Player p = new Adventurer("Test", "Test", 100, new ArrayList<>());
         p.currenthealthpoints = 100;
         
-        UpdatePlayer.majFinDeTour(p);
+        p.updateEndTurn();
         
         assertThat(p.currenthealthpoints, is(100));
     }
@@ -180,7 +184,7 @@ public class UnitTests {
         Player p = new Adventurer("Test", "Test", 100, new ArrayList<>());
         p.currenthealthpoints = 60;
         
-        UpdatePlayer.majFinDeTour(p);
+        p.updateEndTurn();
         
         assertThat(p.currenthealthpoints, is(60));
     }
@@ -191,7 +195,7 @@ public class UnitTests {
         Player p = new Archer("Legolas", "Elf", 100, new ArrayList<>());
         p.currenthealthpoints = 20;
         
-        UpdatePlayer.majFinDeTour(p);
+        p.updateEndTurn();
         assertThat(p.currenthealthpoints, is(21));
     }
 
@@ -200,7 +204,8 @@ public class UnitTests {
     void testDwarfNoElixir() {
         Player p = new Dwarf("Gimli", "Dwarf", 100, new ArrayList<>());
         p.currenthealthpoints = 10;
-        UpdatePlayer.majFinDeTour(p);
+        
+        p.updateEndTurn();
         assertThat(p.currenthealthpoints, is(11));
     }
     
@@ -233,7 +238,7 @@ public class UnitTests {
     void testAddXpNoLevelUp() {
         Player p = new Adventurer("Test", "Test", 100, new ArrayList<>());
         
-        boolean leveledUp = UpdatePlayer.addXp(p, 5);
+        boolean leveledUp = p.addXp(5);
         
         assertThat(leveledUp, is(false));
         assertThat(p.getXp(), is(5));
@@ -257,7 +262,7 @@ public class UnitTests {
         p.healthpoints = 100;
         p.currenthealthpoints = 20;
         
-        UpdatePlayer.majFinDeTour(p);
+        p.updateEndTurn();
         assertThat(p.currenthealthpoints, is(22));
     }
 
@@ -267,23 +272,27 @@ public class UnitTests {
         Player p = new Adventurer("Bug", "Bug", 100, null);
         
         p.abilities = null;
-        String res;
+        String res = Affichage.afficherJoueur(p);
+        assertThat(res, notNullValue());
     }
+
     @Test
     @DisplayName("Adventurer Niveau 3+ : Bonus de soin complet (+2 PV)")
     void testAdventurerHealHighLevel() {
         Player p = new Adventurer("Conan", "Le Barbare", 100, new ArrayList<>());
         
         p.xp = 30; 
-        
         p.currenthealthpoints = 10;
 
-        p.majFinDeTour(); 
+        p.updateEndTurn(); 
         assertThat(p.currenthealthpoints, is(12));
     }
+
     @Test
     @DisplayName("Coverage : Monter à un niveau inconnu (ex: Niveau 6)")
     void testLevelUpToNonExistentLevel() {
+        // Astuce : On surcharge retrieveLevel mais on hérite de Adventurer
+        // pour ne pas avoir à réimplémenter les méthodes abstraites.
         Player p = new Adventurer("Test", "Test", 100, new ArrayList<>()) {
             @Override
             public int retrieveLevel() {
@@ -293,7 +302,7 @@ public class UnitTests {
         
         p.xp = 0; 
         
-        UpdatePlayer.addXp(p, 200); 
+        p.addXp(200); 
         assertThat(p.retrieveLevel(), is(6));
     }
 
@@ -304,7 +313,7 @@ public class UnitTests {
         
         p.currenthealthpoints = 50;
         
-        UpdatePlayer.majFinDeTour(p);
+        p.updateEndTurn();
         
         assertThat(p.currenthealthpoints, is(50));
     }
@@ -316,9 +325,10 @@ public class UnitTests {
         
         p.currenthealthpoints = 49;
         
-        UpdatePlayer.majFinDeTour(p);
+        p.updateEndTurn();
         assertThat(p.currenthealthpoints, is(50)); 
     }
+
     @Test
     @DisplayName("Coverage : Affichage d'un joueur sans inventaire (Branche boucle vide)")
     void testAffichageEmptyInventory() {
@@ -329,12 +339,12 @@ public class UnitTests {
         assertThat(res, containsString("# Joueur Hobo"));
         assertThat(res, not(containsString("* Potion")));
     }
+
     @Test
     @DisplayName("Coverage : Poids d'un inventaire vide (Boucle For)")
     void testWeightEmptyInventory() {
         Player p = new Adventurer("Leger", "Plume", 100, new ArrayList<>());
         
-        // Appelle explicitement la méthode pour tester la boucle vide
         int weight = p.getCurrentWeight();
         
         assertThat(weight, is(0));
@@ -368,14 +378,23 @@ public class UnitTests {
     @Test
     @DisplayName("Coverage : Constructeur avec classe inconnue (Branche Else)")
     void testConstructorUnknownClass() {
+        // Ici, on doit implémenter les méthodes abstraites du nouveau Player
         Player p = new Player("Naruto", "Konoha", "NINJA", 100, new ArrayList<>()) {
             @Override
-            public void majFinDeTour() {}
+            protected void applyClassSpecificEndTurnEffects() {
+                // Rien
+            }
+            @Override
+            protected HashMap<String, Integer> getLevelBonuses(int level) {
+                // Pas de bonus pour les ninjas
+                return new HashMap<>();
+            }
         };
         
         assertThat(p.abilities, notNullValue());
         assertThat(p.abilities.isEmpty(), is(true));
     }
+
     @Test
     @DisplayName("Coverage : Affichage d'un joueur SANS compétences (Boucle abilities vide)")
     void testAffichageNoAbilities() {
@@ -390,6 +409,7 @@ public class UnitTests {
         assertThat(resMd, containsString("Null"));
         assertThat(resMd, not(containsString("INT :")));
     }
+
     @Test
     @DisplayName("Coverage : Affichage avec listes VIDES (Branche For Loop Skipped)")
     void testAffichageEmptyLists() {
@@ -407,5 +427,4 @@ public class UnitTests {
         assertThat(md, not(containsString("* Potion"))); 
         assertThat(text, not(containsString("ATK :")));
     }
-    
 }

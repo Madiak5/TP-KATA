@@ -1,4 +1,15 @@
 # Correctif - machine ISIMA
+# Rendu du TP Refactoring
+### INFORMATIONS
+ on a eu un petit conflit de depot on arrivait pas à avoir une solution on etait obligé de supprimer le depot et en faire un nouveau
+ d'ou la date recente mais heureusement on avait nos fichiers .
+### Binôme
+* **Madina DIAKITE**
+* **Valérie GUINEO KOUANE**
+
+### Lien du dépôt
+[hhttps://github.com/Madiak5/TP-KATA](https://github.com/Madiak5/TP-KATA)
+
 
 Sur les machines ISIMA, vous **devez** :
 
